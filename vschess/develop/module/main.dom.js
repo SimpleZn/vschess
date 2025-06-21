@@ -1,5 +1,9 @@
 // 自身路径
 vs.selfPath = (function(){
+	if (document.currentScript && document.currentScript.src) {
+		return document.currentScript.src;
+	}
+
 	var currentElement = document.documentElement;
 
 	while (currentElement.tagName.toLowerCase() !== "script") {
@@ -27,7 +31,7 @@ $.extend(vschess, {
 	tabList: "board move comment info share export edit config".split(" "),
 
 	// 钩子列表
-	callbackList: "beforeClickAnimate afterClickAnimate loadFinish selectPiece unSelectPiece afterStartFen afterAnimate afterOpenBook".split(" "),
+	callbackList: "beforeClickAnimate afterClickAnimate loadFinish selectPiece unSelectPiece afterStartFen afterAnimate afterOpenBook openBookError".split(" "),
 
 	// 二进制棋谱扩展名列表
 	binaryExt: "ccm xqf cbr".split(" "),

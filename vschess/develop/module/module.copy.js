@@ -8,30 +8,30 @@ fn.createCopyTextarea = function(){
 fn.copy = function(str, success){
 	typeof success !== "function" && (success = function(){});
 
-	if (document.execCommand && document.queryCommandSupported && document.queryCommandSupported("copy")) {
+	try {
+		navigator.clipboard.writeText(str).then(success);
+		return this;
+	} catch (e) {
+	}
+
+	try {
+		window.clipboardData.setData("Text", str);
+		success();
+		return this;
+	} catch (e) {
+	}
+
+	try {
 		this.copyTextarea.val(str);
 		this.copyTextarea[0].select();
 		this.copyTextarea[0].setSelectionRange(0, str.length);
-
-		if (document.execCommand("copy")) {
-			success();
-		}
-		else {
-			prompt("请按 Ctrl+C 复制：", str);
-		}
-	}
-	else if (window.clipboardData) {
-		if (window.clipboardData.setData("Text", str)) {
-			success();
-		}
-		else {
-			prompt("请按 Ctrl+C 复制：", str);
-		}
-	}
-	else {
-		prompt("请按 Ctrl+C 复制：", str);
+		document.execCommand("copy");
+		success();
+		return this;
+	} catch (e) {
 	}
 
+	prompt("请按 Ctrl+C 复制：", str);
 	return this;
 };
 

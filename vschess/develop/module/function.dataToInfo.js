@@ -1,5 +1,5 @@
 // 从原始数据中抽取棋局信息
-vs.dataToInfo = function(chessData, parseType){
+vs.dataToInfo = function(chessData, parseType, errorCallback){
 	chessData = vs.replaceNbsp(chessData);
 	var replaceQuote = chessData.replace(/\'/g, '"');
 	parseType = parseType || "auto";
@@ -29,7 +29,8 @@ vs.dataToInfo = function(chessData, parseType){
 		return vs.dataToInfo_PlayOK(chessData);
 	}
 
-	// 未能识别的数据，返回空
+	// 未能识别的数据，调用错误回调，并返回空
+	typeof errorCallback === "function" && errorCallback();
 	return {};
 };
 

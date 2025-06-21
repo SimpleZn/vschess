@@ -1,5 +1,5 @@
 /*
- * 微思象棋函数库 V2.6.6
+ * 微思象棋函数库 V2.6.7
  * https://www.xiaxiangqi.com/
  *
  * Copyright @ 2009-2025 Margin.Top 版权所有
@@ -11,17 +11,17 @@
  * 鸣谢列表敬请移步 GitHub 项目主页，排名不分先后
  * https://github.com/FastLight126/vschess
  *
- * 最后修改日期：北京时间 2025年2月25日
- * Tue, 25 Feb 2025 14:40:42 +0800
+ * 最后修改日期：北京时间 2025年3月20日
+ * Thu, 20 Mar 2025 12:42:59 +0800
  */
 
 // 主程序
 var vschess = {
 	// 当前版本号
-	version: "2.6.6",
+	version: "2.6.7",
 
 	// 版本时间戳
-	timestamp: "Tue, 25 Feb 2025 14:40:42 +0800",
+	timestamp: "Thu, 20 Mar 2025 12:42:59 +0800",
 
 	// 默认局面，使用 16x16 方式存储数据，虽然浪费空间，但是便于运算，效率较高
 	// situation[0] 表示的是当前走棋方，1 为红方，2 为黑方
@@ -337,7 +337,7 @@ vschess.defaultOptions = {
 };
 
 // 从二进制原始数据中抽取棋局信息
-vschess.binaryToInfo = function(buffer, parseType){
+vschess.binaryToInfo = function(buffer, parseType, errorCallback){
     parseType = parseType || "auto";
 
     // 象棋演播室 XQF 格式
@@ -350,12 +350,13 @@ vschess.binaryToInfo = function(buffer, parseType){
 		return vschess.binaryToInfo_CBR(buffer);
 	}
 
-    // 未能识别的数据，返回空
+    // 未能识别的数据，调用错误回调，并返回空
+	typeof errorCallback === "function" && errorCallback();
 	return {};
 };
 
 // 将二进制原始数据转换为棋谱节点树，这里的变招都是节点，变招的切换即为默认节点的切换
-vschess.binaryToNode = function(buffer, parseType){
+vschess.binaryToNode = function(buffer, parseType, errorCallback) {
     parseType = parseType || "auto";
 
     // 象棋演播室 XQF 格式
@@ -373,7 +374,8 @@ vschess.binaryToNode = function(buffer, parseType){
 		return vschess.binaryToNode_CCM(buffer);
 	}
 
-    // 未能识别的数据，返回起始局面
+    // 未能识别的数据，调用错误回调，并返回起始局面
+	typeof errorCallback === "function" && errorCallback();
 	return { fen: vschess.defaultFen, comment: "", next: [], defaultIndex: 0 };
 };
 
@@ -717,7 +719,7 @@ vschess.nodeToBinary_CBR = function(node, chessInfo, mirror){
 };
 
 // 从原始数据中抽取棋局信息
-vschess.dataToInfo = function(chessData, parseType){
+vschess.dataToInfo = function(chessData, parseType, errorCallback){
 	chessData = vschess.replaceNbsp(chessData);
 	var replaceQuote = chessData.replace(/\'/g, '"');
 	parseType = parseType || "auto";
@@ -747,7 +749,8 @@ vschess.dataToInfo = function(chessData, parseType){
 		return vschess.dataToInfo_PlayOK(chessData);
 	}
 
-	// 未能识别的数据，返回空
+	// 未能识别的数据，调用错误回调，并返回空
+	typeof errorCallback === "function" && errorCallback();
 	return {};
 };
 
@@ -948,7 +951,7 @@ vschess.isDataHasBook = function(chessData, parseType){
 };
 
 // 将原始数据转换为棋谱节点树，这里的变招都是节点，变招的切换即为默认节点的切换
-vschess.dataToNode = function(chessData, parseType){
+vschess.dataToNode = function(chessData, parseType, errorCallback){
 	var match, RegExp = vschess.RegExp();
 	parseType = parseType || "auto";
 
@@ -1025,7 +1028,8 @@ vschess.dataToNode = function(chessData, parseType){
 		return { fen: match[0] + " w - - 0 1", comment: "", next: [], defaultIndex: 0 };
 	}
 
-	// 未能识别的数据，返回起始局面
+	// 未能识别的数据，调用错误回调，并返回起始局面
+	typeof errorCallback === "function" && errorCallback();
 	return { fen: vschess.defaultFen, comment: "", next: [], defaultIndex: 0 };
 };
 
@@ -2058,10 +2062,10 @@ vschess.UTF8 = function(array){
 
             if (codePoint > 65536) {
 				codePoint -= 65536;
-				str.pusn(vschess.fcc(55296 + (codePoint >> 10)) + vschess.fcc(56320 + (codePoint & 0x3FF)));
+				str.push(vschess.fcc(55296 + (codePoint >> 10)) + vschess.fcc(56320 + (codePoint & 0x3FF)));
             }
             else {
-				str.pusn(vschess.fcc(codePoint));
+				str.push(vschess.fcc(codePoint));
             }
 
             i += 3;
@@ -2078,7 +2082,7 @@ vschess.detectUTF8 = function(array){
 			continue;
 		}
 
-		var length = array[i] >> 4 === 15 ? 4 : array[i].toString(2).indexOf("0");
+		var length = array[i] >= 240 ? 4 : array[i].toString(2).indexOf("0");
 
 		for (var j = 1; j < length; ++j) {
 			if (array[i + j] >> 6 !== 2) {

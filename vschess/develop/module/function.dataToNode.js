@@ -64,7 +64,7 @@ vs.isDataHasBook = function(chessData, parseType){
 };
 
 // 将原始数据转换为棋谱节点树，这里的变招都是节点，变招的切换即为默认节点的切换
-vs.dataToNode = function(chessData, parseType){
+vs.dataToNode = function(chessData, parseType, errorCallback){
 	var match, RegExp = vs.RegExp();
 	parseType = parseType || "auto";
 
@@ -141,7 +141,8 @@ vs.dataToNode = function(chessData, parseType){
 		return { fen: match[0] + " w - - 0 1", comment: "", next: [], defaultIndex: 0 };
 	}
 
-	// 未能识别的数据，返回起始局面
+	// 未能识别的数据，调用错误回调，并返回起始局面
+	typeof errorCallback === "function" && errorCallback();
 	return { fen: vs.defaultFen, comment: "", next: [], defaultIndex: 0 };
 };
 

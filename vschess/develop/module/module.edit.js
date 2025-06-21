@@ -685,16 +685,17 @@ fn.createEditOtherButton = function(){
 					var RegExp    = vs.RegExp();
 					var fileData  = new Uint8Array(this.result);
 					var chessData = vs.join(fileData);
+					var openBookErrorCallback = typeof _this["callback_openBookError"] === "function" ? _this["callback_openBookError"] : function(){};
 
 					// 二进制棋谱，象棋世家格式中可能含有非打印字符
 					if (~vs.binaryExt.indexOf(ext) || vs.checkNonPrintable(fileData) && !RegExp.ShiJia.test(chessData)) {
-						var chessNode = vs.binaryToNode(fileData);
-						var chessInfo = vs.binaryToInfo(fileData);
+						var chessNode = vs.binaryToNode(fileData, 'auto', openBookErrorCallback);
+						var chessInfo = vs.binaryToInfo(fileData, 'auto', openBookErrorCallback);
 					}
 					else {
 						!RegExp.ShiJia.test(chessData) && (chessData = vs.iconv2UTF8(fileData));
-						var chessNode = vs.dataToNode(chessData);
-						var chessInfo = vs.dataToInfo(chessData);
+						var chessNode = vs.dataToNode(chessData, 'auto', openBookErrorCallback);
+						var chessInfo = vs.dataToInfo(chessData, 'auto', openBookErrorCallback);
 					}
 
 					_this.loadData(chessNode, chessInfo);
@@ -776,15 +777,23 @@ fn.bindDrag = function(){
 				var fileData  = new Uint8Array(this.result);
 				var chessData = vs.join(fileData);
 
+				var openBookErrorCallbackNode = function(){
+					typeof _this["callback_openBookError"] === "function" && _this["callback_openBookError"](file.name, fileData, 'node');
+				};
+
+				var openBookErrorCallbackInfo = function(){
+					typeof _this["callback_openBookError"] === "function" && _this["callback_openBookError"](file.name, fileData, 'info');
+				};
+
 				// 二进制棋谱，象棋世家格式中可能含有非打印字符
 				if (~vs.binaryExt.indexOf(ext) || vs.checkNonPrintable(fileData) && !RegExp.ShiJia.test(chessData)) {
-					var chessNode = vs.binaryToNode(fileData);
-					var chessInfo = vs.binaryToInfo(fileData);
+					var chessNode = vs.binaryToNode(fileData, 'auto', openBookErrorCallbackNode);
+					var chessInfo = vs.binaryToInfo(fileData, 'auto', openBookErrorCallbackInfo);
 				}
 				else {
 					RegExp.ShiJia.test(chessData) || (chessData = vs.iconv2UTF8(fileData));
-					var chessNode = vs.dataToNode(chessData);
-					var chessInfo = vs.dataToInfo(chessData);
+					var chessNode = vs.dataToNode(chessData, 'auto', openBookErrorCallbackNode);
+					var chessInfo = vs.dataToInfo(chessData, 'auto', openBookErrorCallbackInfo);
 				}
 
 				_this.loadData(chessNode, chessInfo);

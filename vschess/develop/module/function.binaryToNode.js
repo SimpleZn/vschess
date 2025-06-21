@@ -1,5 +1,5 @@
 // 将二进制原始数据转换为棋谱节点树，这里的变招都是节点，变招的切换即为默认节点的切换
-vs.binaryToNode = function(buffer, parseType){
+vs.binaryToNode = function(buffer, parseType, errorCallback) {
     parseType = parseType || "auto";
 
     // 象棋演播室 XQF 格式
@@ -17,7 +17,8 @@ vs.binaryToNode = function(buffer, parseType){
 		return vs.binaryToNode_CCM(buffer);
 	}
 
-    // 未能识别的数据，返回起始局面
+    // 未能识别的数据，调用错误回调，并返回起始局面
+	typeof errorCallback === "function" && errorCallback();
 	return { fen: vs.defaultFen, comment: "", next: [], defaultIndex: 0 };
 };
 
