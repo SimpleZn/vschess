@@ -14,8 +14,8 @@
  * 选择器引擎选用 Qwery
  * https://github.com/ded/qwery/
  *
- * 最后修改日期：北京时间 2025年6月21日
- * Sat, 21 Jun 2025 11:52:39 +0800
+ * 最后修改日期：北京时间 2025年8月3日
+ * Sun, 03 Aug 2025 14:31:29 +0800
  */
 
 (function(){
@@ -1178,7 +1178,7 @@ var vschess = {
 	version: "2.6.7",
 
 	// 版本时间戳
-	timestamp: "Sat, 21 Jun 2025 11:52:39 +0800",
+	timestamp: "Sun, 03 Aug 2025 14:31:29 +0800",
 
 	// 默认局面，使用 16x16 方式存储数据，虽然浪费空间，但是便于运算，效率较高
 	// situation[0] 表示的是当前走棋方，1 为红方，2 为黑方
@@ -2244,51 +2244,32 @@ vschess.dataToInfo_PFC = function(chessData){
 
 // 从标准 PGN 格式中抽取棋局信息
 vschess.dataToInfo_PGN = function(chessData){
-	// 识别模式 A
-	var resultA = {}, original = {};
-	var lines = chessData.split("\n");
+	var result = {}, original = {};
+	var infos = chessData.split("[");
 
-	for (var i = 0; i < lines.length; ++i) {
-		var l = $.trim(lines[i]);
-		var start = l.    indexOf("[");
-		var end   = l.lastIndexOf("]");
+	for (var i = 0; i < infos.length; ++i) {
+		var end = infos[i].lastIndexOf("]");
+		var info = $.trim(~end ? infos[i].substring(0, end) : infos[i]);
 
-		if (~start && ~end) {
-			var info  = l.substring(start + 1, end);
-			var name  = info.split(/[\s]/)[0];
-			var value = $.trim(info.replace(name, ""));
-			var quotA = value.charAt(0               ) === "'" || value.charAt(0               ) === '"';
-			var quotB = value.charAt(value.length - 1) === "'" || value.charAt(value.length - 1) === '"';
-			quotA && (value = value.substring(1                  ));
-			quotB && (value = value.substring(0, value.length - 1));
-			original[name] = value;
+		if (!info) {
+			continue;
 		}
+
+		var name  = $.trim(info.split(/[\s]/)[0]);
+		var value = $.trim(info.replace(name, ""));
+		var quotA = value.charAt(0               ) === "'" || value.charAt(0               ) === '"';
+		var quotB = value.charAt(value.length - 1) === "'" || value.charAt(value.length - 1) === '"';
+		quotA && (value = value.substring(1                  ));
+		quotB && (value = value.substring(0, value.length - 1));
+		original[name] = value;
 	}
 
 	for (var i in vschess.info.name) {
 		var name = vschess.info.pgn[i] || vschess.fieldNameToCamel(i);
-		original[name] && (resultA[i] = vschess.stripTags(original[name]));
+		original[name] && (result[i] = vschess.stripTags(original[name]));
 	}
 
-	// 识别模式 B
-	var resultB = {};
-
-	for (var i in vschess.info.name) {
-		var startTag = "[" + (vschess.info.pgn[i] || vschess.fieldNameToCamel(i));
-		var startPos = chessData.indexOf(startTag);
-
-		if (~startPos) {
-			var value = chessData.substring(startPos + startTag.length + 2, chessData.indexOf("]", startPos) - 1);
-			value && (resultB[i] = vschess.stripTags(value));
-		}
-	}
-
-	// AB 结果集合并
-	for (var i in resultB) {
-		(!resultA[i] || resultB[i].length > resultA[i].length) && (resultA[i] = resultB[i]);
-	}
-
-	return resultA;
+	return result;
 };
 
 // 从 PlayOK 格式中抽取棋局信息
