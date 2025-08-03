@@ -49,51 +49,32 @@ vs.dataToInfo_PFC = function(chessData){
 
 // 从标准 PGN 格式中抽取棋局信息
 vs.dataToInfo_PGN = function(chessData){
-	// 识别模式 A
-	var resultA = {}, original = {};
-	var lines = chessData.split("\n");
+	var result = {}, original = {};
+	var infos = chessData.split("[");
 
-	for (var i = 0; i < lines.length; ++i) {
-		var l = $.trim(lines[i]);
-		var start = l.    indexOf("[");
-		var end   = l.lastIndexOf("]");
+	for (var i = 0; i < infos.length; ++i) {
+		var end = infos[i].lastIndexOf("]");
+		var info = $.trim(~end ? infos[i].substring(0, end) : infos[i]);
 
-		if (~start && ~end) {
-			var info  = l.substring(start + 1, end);
-			var name  = info.split(/[\s]/)[0];
-			var value = $.trim(info.replace(name, ""));
-			var quotA = value.charAt(0               ) === "'" || value.charAt(0               ) === '"';
-			var quotB = value.charAt(value.length - 1) === "'" || value.charAt(value.length - 1) === '"';
-			quotA && (value = value.substring(1                  ));
-			quotB && (value = value.substring(0, value.length - 1));
-			original[name] = value;
+		if (!info) {
+			continue;
 		}
+
+		var name  = $.trim(info.split(/[\s]/)[0]);
+		var value = $.trim(info.replace(name, ""));
+		var quotA = value.charAt(0               ) === "'" || value.charAt(0               ) === '"';
+		var quotB = value.charAt(value.length - 1) === "'" || value.charAt(value.length - 1) === '"';
+		quotA && (value = value.substring(1                  ));
+		quotB && (value = value.substring(0, value.length - 1));
+		original[name] = value;
 	}
 
 	for (var i in vs.info.name) {
 		var name = vs.info.pgn[i] || vs.fieldNameToCamel(i);
-		original[name] && (resultA[i] = vs.stripTags(original[name]));
+		original[name] && (result[i] = vs.stripTags(original[name]));
 	}
 
-	// 识别模式 B
-	var resultB = {};
-
-	for (var i in vs.info.name) {
-		var startTag = "[" + (vs.info.pgn[i] || vs.fieldNameToCamel(i));
-		var startPos = chessData.indexOf(startTag);
-
-		if (~startPos) {
-			var value = chessData.substring(startPos + startTag.length + 2, chessData.indexOf("]", startPos) - 1);
-			value && (resultB[i] = vs.stripTags(value));
-		}
-	}
-
-	// AB 结果集合并
-	for (var i in resultB) {
-		(!resultA[i] || resultB[i].length > resultA[i].length) && (resultA[i] = resultB[i]);
-	}
-
-	return resultA;
+	return result;
 };
 
 // 从 PlayOK 格式中抽取棋局信息
